@@ -1,6 +1,7 @@
 # store
 
 A new Flutter project.
+Contributor of the project Baby Cheickne Abdessemed Jylane Lucas Dias
 
 ## Getting Started
 
