@@ -10,7 +10,7 @@ class RootLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppbarWidget(),
-      drawer: DrawerWidget(),
+      drawer: AppDrawer(),
       body: screen,
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:store/models/category.dart';
 import 'package:store/models/product.dart';
 import 'package:store/providers/category_provider.dart';
 import 'package:store/services/category_api_service.dart';
@@ -11,54 +10,68 @@ class CategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Category category = context.watch<CategoryProvider>().category!;
+    final category = context.watch<CategoryProvider>().category!;
 
-    return Container(
-      padding: EdgeInsets.all(15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            category.name!,
-            style: Theme.of(context).textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          FutureBuilder(
-            future: CategoryApiService().getProductsByCategoryId(category.id!),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                List<Product> data = snapshot.requireData;
+    return FutureBuilder<List<Product>>(
+      future: CategoryApiService().getProductsByCategoryId(category.id!),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: data.length,
-                  itemBuilder: (context, index) {
-                    final product = data[index];
+        if (snapshot.hasError) {
+          return const Center(child: Text("Erreur lors du chargement des produits."));
+        }
 
-                    return ListTile(
-                      leading: Image.network(product.images![0]),
-                      title: Text(product.title!),
-                      subtitle: Text('${product.price!}€'),
-                      trailing: Icon(Icons.arrow_forward_ios, size: 10),
+        final products = snapshot.data ?? [];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                category.name ?? '',
+                style: Theme.of(context).textTheme.headlineMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              if (products.isEmpty)
+                const Center(child: Text("Aucun produit trouvé."))
+              else
+                ...products.map((product) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          product.images?.first ?? '',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+                        ),
+                      ),
+                      title: Text(product.title ?? ''),
+                      subtitle: Text('${product.price?.toStringAsFixed(2) ?? '0.00'} €'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                ProductDetailScreen(product: product),
+                            builder: (_) => ProductDetailScreen(product: product),
                           ),
                         );
                       },
-                    );
-                  },
-                );
-              }
-
-              return Center(child: CircularProgressIndicator());
-            },
+                    ),
+                  );
+                }).toList(),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
