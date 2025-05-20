@@ -7,6 +7,24 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(spacing: 20, children: [AdWidget(), CategoriesWidget()]);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Titre
+          Text(
+            'Bienvenue sur My Store',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 16),
+
+          const AdWidget(),
+          const SizedBox(height: 24),
+
+          const CategoriesWidget(),
+        ],
+      ),
+    );
   }
 }

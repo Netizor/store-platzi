@@ -1,87 +1,112 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
-// classe du widget
 class AdWidget extends StatefulWidget {
-  AdWidget({super.key});
+  const AdWidget({super.key});
 
-  // liste des pubs
-  final List adsList = [
-    // Map : accéder aux propriétés par des crochets
-    {"img": "ad.webp", "text": "Text01"},
-    {"img": "ad2.webp", "text": "Text02"},
-    {"img": "ad3.webp", "text": "Text03"},
+  static const List<Map<String, String>> adsList = [
+    {"img": "ad.webp", "text": "Promo : -30% sur les chaussures !"},
+    {"img": "ad2.webp", "text": "Nouveautés printemps disponibles 🌸"},
+    {"img": "ad3.webp", "text": "Livraison gratuite dès 50 €"},
   ];
 
   @override
   State<AdWidget> createState() => _AdWidgetState();
 }
 
-// classe de l'état du widget
 class _AdWidgetState extends State<AdWidget> {
-  // propriétés
-  int adIndex = 0;
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
-  // état : propriété d'un widget utlisé dans la méthode build
-  double adPosition = 0;
-
-  // initState : méthode liée à l'affichage d'un widget
   @override
   void initState() {
     super.initState();
+    Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_pageController.hasClients) {
+        int nextPage = (_currentPage + 1) % AdWidget.adsList.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
 
-    // minuteur
-    Timer.periodic(Duration(seconds: 2), _changeAdPosition);
-  }
-
-  // minuteur
-  void _changeAdPosition(Timer timer) {
-    // widget permet d'accéder à la classe du widget à partir de classe d'un état
-    if (adIndex < widget.adsList.length - 1) {
-      adIndex++;
-    } else {
-      adIndex = 0;
-    }
-
-    // setState permet de modifier un état, nouvel apppel de build
-    setState(() {
-      // modifier un état
-      adPosition = -(adIndex * MediaQuery.of(context).size.width);
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page?.round() ?? 0;
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 220,
+      height: 200,
       child: Stack(
+        alignment: Alignment.bottomCenter,
         children: [
-          AnimatedPositioned(
-            duration: Duration(milliseconds: 400),
-            curve: Curves.easeInSine,
-            left: adPosition,
-            child: SizedBox(
-              height: 220,
-              child: ListView(
-                // shrinkWrap : la hauteur du widget est dépendant du contenu du widget
-                shrinkWrap: true,
-                scrollDirection: Axis.horizontal,
-                children: [
-                  ...widget.adsList.map((ad) {
-                    return Column(
-                      children: [
-                        // image stockée dans l'application
-                        Image.asset(
-                          'assets/images/${ad['img']}',
-                          // récupérer la largeur de l'écran
-                          width: MediaQuery.of(context).size.width,
+          PageView.builder(
+            controller: _pageController,
+            itemCount: AdWidget.adsList.length,
+            itemBuilder: (context, index) {
+              final ad = AdWidget.adsList[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        'assets/images/${ad["img"]}',
+                        fit: BoxFit.cover,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.black54, Colors.transparent],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                          ),
                         ),
-                        Text(ad['text']),
-                      ],
-                    );
-                  }),
-                ],
+                      ),
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            ad["text"] ?? '',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          Positioned(
+            bottom: 8,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                AdWidget.adsList.length,
+                    (index) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _currentPage == index ? 12 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _currentPage == index ? Colors.white : Colors.white54,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
               ),
             ),
           ),

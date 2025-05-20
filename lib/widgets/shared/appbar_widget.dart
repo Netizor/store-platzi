@@ -28,7 +28,7 @@ class AppbarWidget extends StatelessWidget implements PreferredSizeWidget {
         onTap: () {
           context.goNamed('home');
         },
-        child: Text('My Store'),
+        child: Text('Store Platzi App'),
       ),
       actions: [
         IconButton(
